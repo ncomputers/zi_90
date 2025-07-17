@@ -1,3 +1,5 @@
+#dashboard.py
+#version 81.1
 """Dashboard and websocket routes."""
 from __future__ import annotations
 import os
@@ -76,6 +78,55 @@ async def video_feed(cam_id: int, request: Request):
             _, buf = cv2.imencode('.jpg', frame)
             yield b'--frame\r\nContent-Type: image/jpeg\r\n\r\n' + buf.tobytes() + b'\r\n'
             await asyncio.sleep(1 / tr.fps)
+    return StreamingResponse(gen(), media_type='multipart/x-mixed-replace; boundary=frame')
+
+@router.get('/raw_feed/{cam_id}')
+async def raw_feed(cam_id: int, request: Request):
+    res = require_roles(request, ['admin','viewer'])
+    if isinstance(res, RedirectResponse):
+        return res
+    tr = trackers_map.get(cam_id)
+    if not tr:
+        return HTMLResponse('Not found', status_code=404)
+
+    async def gen():
+        while True:
+            with lock:
+                frame = tr.raw_frame
+            if frame is None:
+                await asyncio.sleep(0.1)
+                continue
+            _, buf = cv2.imencode('.jpg', frame)
+            yield b'--frame\r\nContent-Type: image/jpeg\r\n\r\n' + buf.tobytes() + b'\r\n'
+            await asyncio.sleep(1 / tr.fps)
+    return StreamingResponse(gen(), media_type='multipart/x-mixed-replace; boundary=frame')
+
+
+@router.get('/feed/{cam_id}')
+async def live_feed(cam_id: int, request: Request):
+    """Return dashboard frame based on camera stream mode."""
+    res = require_roles(request, ['admin','viewer'])
+    if isinstance(res, RedirectResponse):
+        return res
+    cam = next((c for c in cams if c['id'] == cam_id), None)
+    if not cam:
+        return HTMLResponse('Not found', status_code=404)
+    mode = cam.get('dashboard_stream_mode', 'raw')
+    tr = trackers_map.get(cam_id)
+    if not tr:
+        return HTMLResponse('Not found', status_code=404)
+
+    async def gen():
+        while True:
+            with lock:
+                frame = tr.output_frame if mode == 'debug' else tr.raw_frame
+            if frame is None:
+                await asyncio.sleep(0.1)
+                continue
+            _, buf = cv2.imencode('.jpg', frame)
+            yield b'--frame\r\nContent-Type: image/jpeg\r\n\r\n' + buf.tobytes() + b'\r\n'
+            await asyncio.sleep(1 / tr.fps)
+
     return StreamingResponse(gen(), media_type='multipart/x-mixed-replace; boundary=frame')
 
 @router.websocket('/ws/stats')
