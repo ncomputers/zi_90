@@ -1,3 +1,4 @@
+#cameras.py
 """Camera management routes."""
 from __future__ import annotations
 from typing import Dict, List
@@ -69,6 +70,7 @@ async def add_camera(request: Request):
         'reverse': reverse,
         'line_orientation': orientation,
         'resolution': resolution,
+        'dashboard_stream_mode': 'raw',
     }
     cams.append(cam)
     save_cameras(cams, redis)
@@ -124,6 +126,8 @@ async def update_camera(cam_id: int, request: Request):
                 cam['line_orientation'] = data['line_orientation']
             if 'resolution' in data:
                 cam['resolution'] = data['resolution']
+            if 'dashboard_stream_mode' in data:
+                cam['dashboard_stream_mode'] = data['dashboard_stream_mode']
             save_cameras(cams, redis)
             tr = trackers_map.get(cam_id)
             if tr:
