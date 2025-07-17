@@ -1,3 +1,5 @@
+#tracker_manager.py
+#version 81
 """Manage PersonTracker instances and related counters."""
 from __future__ import annotations
 import json
@@ -41,6 +43,7 @@ def load_cameras(r: redis.Redis, default_url: str) -> List[dict]:
                 cam.setdefault("reverse", False)
                 cam.setdefault("line_orientation", "vertical")
                 cam.setdefault("resolution", "original")
+                cam.setdefault("dashboard_stream_mode", "raw")
             if len(cams) == 1 and cams[0].get("id") == 1 and cams[0]["url"] != default_url:
                 cams[0]["url"] = default_url
                 r.set("cameras", json.dumps(cams))
@@ -58,6 +61,7 @@ def load_cameras(r: redis.Redis, default_url: str) -> List[dict]:
             "reverse": False,
             "line_orientation": "vertical",
             "resolution": "original",
+            "dashboard_stream_mode": "raw",
         }
     ]
     r.set("cameras", json.dumps(cams))

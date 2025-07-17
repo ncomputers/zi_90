@@ -1,3 +1,5 @@
+#duplicate_filter.py
+#version 81
 import cv2
 import time
 from PIL import Image
