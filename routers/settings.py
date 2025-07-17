@@ -1,3 +1,5 @@
+#settings.py
+#version 81
 """Settings management routes."""
 from __future__ import annotations
 from typing import Dict, List

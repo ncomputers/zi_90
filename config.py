@@ -1,3 +1,5 @@
+#config.py
+#version 81
 # Global configuration object to share across modules
 config = {}
 
