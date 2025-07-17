@@ -1,9 +1,12 @@
+#alerts.py
+#version 81.1
 from __future__ import annotations
 import json
 import io
 import time
 import threading
 from loguru import logger
+from modules.profiler import register_thread
 from .utils import send_email
 import redis
 from datetime import datetime, timedelta
@@ -25,6 +28,7 @@ class AlertWorker:
         self.thread.join(timeout=2)
 
     def loop(self):
+        register_thread("Alerts")
         while self.running:
             try:
                 self.check_rules()
